@@ -6,11 +6,25 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/apiClient";
-import { SIGNUP_ROUTE } from "@/utils/constants";
+import { LOGIN_ROUTE, SIGNUP_ROUTE } from "@/utils/constants";
+import { useNavigate } from "react-router-dom";
 const Auth = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  const validateLogin = () => {
+    if (!email.length) {
+      toast.error("Email is required.");
+      return false;
+    }
+    if (!password.length) {
+      toast.error("Password is required.");
+      return false;
+    }
+    return true;
+  };
 
   const validateSignup = () => {
     if (!email.length) {
@@ -27,18 +41,37 @@ const Auth = () => {
     }
     return true;
   };
-  const handleLogin = () => {
-    console.log(email, password);
+
+  const handleLogin = async () => {
+    if (validateLogin()) {
+      const response = await apiClient.post(
+        LOGIN_ROUTE,
+        { email, password },
+        { withCredentials: true }
+      );
+      if (response.data.user.id) {
+        if (response.data.user.profileSetup) {
+          navigate("/chat");
+        } else {
+          navigate("/profile");
+        }
+      }
+    }
   };
+
   const handleSignup = async () => {
     if (validateSignup()) {
       console.log("validate pass");
       try {
-        await apiClient.post(
+        const response = await apiClient.post(
           SIGNUP_ROUTE,
-          { email, password }
-          // { withCredentials: true }
+          { email, password },
+          { withCredentials: true }
         );
+        if (response.status === 201) {
+          toast.success("Signup successful");
+          navigate("/profile");
+        }
       } catch (error) {
         console.log("Error", error.response);
         toast.error(error.response.data);
@@ -65,7 +98,7 @@ const Auth = () => {
             </p>
           </div>
           <div className="flex items-center justify-center w-full">
-            <Tabs className="w-3/4">
+            <Tabs className="w-3/4" defaultValue="login">
               <TabsList className="bg-transparent rounded-none w-full">
                 <TabsTrigger
                   value="login"
@@ -95,7 +128,9 @@ const Auth = () => {
                   value={email}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-                <Button className="rounded-full p-6">Login</Button>
+                <Button className="rounded-full p-6" onClick={handleLogin}>
+                  Login
+                </Button>
               </TabsContent>
               <TabsContent value="signup" className="flex flex-col gap-5">
                 <Input

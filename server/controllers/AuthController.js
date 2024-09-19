@@ -41,11 +41,11 @@ export const login = async (req, res, next) => {
     const { email, password } = req.body;
     const user = await UserModel.findOne({ email });
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).send({ message: "User not found" });
     }
     const auth = await compare(password, user.password);
     if (!auth) {
-      return res.status(401).json({ message: "Password is incorrect" });
+      return res.status(400).send({ message: "Password is incorrect" });
     }
 
     res.cookie("jwt", createToken(email, user.id), {
@@ -65,6 +65,6 @@ export const login = async (req, res, next) => {
       },
     });
   } catch (error) {
-    console.log("IS ERROR");
+    return res.status(500).send("Internal Server Error");
   }
 };

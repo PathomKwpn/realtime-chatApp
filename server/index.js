@@ -17,7 +17,7 @@ app.use(
   cors({
     origin: [process.env.ORIGIN],
     method: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-    credential: true,
+    credentials: true,
   })
 );
 app.use(express.json());
