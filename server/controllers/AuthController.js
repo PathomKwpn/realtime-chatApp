@@ -1,10 +1,11 @@
+import { compare } from "bcrypt";
 import UserModel from "../models/UserModel.js";
 import jwt from "jsonwebtoken";
 
 const maxAge = 3 * 24 * 60 * 60 * 1000;
 
 const createToken = (email, id) => {
-  return jwt.sign({ email, id }, process.env.JWT_SECRET, {
+  return jwt.sign({ email, id }, process.env.JWT_KEY, {
     expiresIn: maxAge,
   });
 };
@@ -13,11 +14,9 @@ export const signup = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Email and password are required" });
+      return res.status(400).send("Email and password are required");
     }
-    const user = await UserModel.create(email, password);
+    const user = await UserModel.create({ email, password });
     res.cookie("jwt", createToken(email, user.id), {
       maxAge,
       secure: true,
@@ -34,27 +33,38 @@ export const signup = async (req, res, next) => {
       },
     });
   } catch (error) {
-    console.log(error);
+    return res.status(400).send("Internal qwdqwdwqd error");
   }
 };
 export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    const user = await UserModel.findOne({ email }).select("+password").exec();
+    const user = await UserModel.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    const match = await user.comparePassword(password);
-    if (!match) {
-      return res.status(401).json({ message: "Invalid credentials" });
+    const auth = await compare(password, user.password);
+    if (!auth) {
+      return res.status(401).json({ message: "Password is incorrect" });
     }
-    const token = await user.generateToken();
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+
+    res.cookie("jwt", createToken(email, user.id), {
+      maxAge,
+      secure: true,
+      sameSite: "None",
     });
-    res.status(200).json({ user });
+    return res.status(200).json({
+      user: {
+        id: user.id,
+        email: user.email,
+        profileSetup: user.profileSetup,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        image: user.image,
+        color: user.color,
+      },
+    });
   } catch (error) {
-    next(error);
+    console.log("IS ERROR");
   }
 };

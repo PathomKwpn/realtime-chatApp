@@ -1,7 +1,7 @@
-import { Route } from "express";
+import { Route, Router } from "express";
 import { signup } from "../controllers/AuthController.js";
 
-const authRoutes = Route();
+const authRoutes = Router();
 
 authRoutes.post("/signup", signup);
 

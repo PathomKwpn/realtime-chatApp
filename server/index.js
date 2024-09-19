@@ -6,8 +6,8 @@ import mongoose from "mongoose";
 import authRoutes from "./routes/AuthRoutes.js";
 dotenv.config();
 const app = express();
-const port = process.env.PORT || 5000;
-const databaseURL = process.env.DATABASE;
+const port = process.env.PORT || 3001;
+const databaseURL = process.env.DATABASE_URL;
 
 const server = app.listen(port, () => {
   console.log(`Server is running on port: http://localhost:${port}`);
