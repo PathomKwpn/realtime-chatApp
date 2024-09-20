@@ -8,8 +8,10 @@ import { toast } from "sonner";
 import { apiClient } from "@/lib/apiClient";
 import { LOGIN_ROUTE, SIGNUP_ROUTE } from "@/utils/constants";
 import { useNavigate } from "react-router-dom";
+import { useAppStore } from "@/store";
 const Auth = () => {
   const navigate = useNavigate();
+  const { setUserInfo } = useAppStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -50,6 +52,7 @@ const Auth = () => {
         { withCredentials: true }
       );
       if (response.data.user.id) {
+        setUserInfo(response.data.user);
         if (response.data.user.profileSetup) {
           navigate("/chat");
         } else {
@@ -69,6 +72,7 @@ const Auth = () => {
           { withCredentials: true }
         );
         if (response.status === 201) {
+          setUserInfo(response.data.user);
           toast.success("Signup successful");
           navigate("/profile");
         }
@@ -76,12 +80,6 @@ const Auth = () => {
         console.log("Error", error.response);
         toast.error(error.response.data);
       }
-
-      // if (response.status === 201) {
-      //   toast.success("Signup successful");
-      // } else {
-      //   toast.error("Signup failed");
-      // }
     }
   };
   return (
@@ -125,7 +123,7 @@ const Auth = () => {
                   placeholder="Password"
                   type="password"
                   className="rounded-full p-6"
-                  value={email}
+                  value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
                 <Button className="rounded-full p-6" onClick={handleLogin}>

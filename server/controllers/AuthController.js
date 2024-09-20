@@ -11,6 +11,8 @@ const createToken = (email, id) => {
 };
 
 export const signup = async (req, res, next) => {
+  console.log("---Signup---");
+
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -22,6 +24,8 @@ export const signup = async (req, res, next) => {
       secure: true,
       sameSite: "None",
     });
+    console.log(`Status ${user.status} Message: ${user.message}`);
+
     return res.status(201).json({
       user: {
         id: user.id,
@@ -33,18 +37,24 @@ export const signup = async (req, res, next) => {
       },
     });
   } catch (error) {
+    console.log(`Status: ${error.status} Message: ${error.message}`);
+
     return res.status(400).send("Internal qwdqwdwqd error");
   }
 };
 export const login = async (req, res, next) => {
+  console.log("---Login---");
+
   try {
     const { email, password } = req.body;
     const user = await UserModel.findOne({ email });
     if (!user) {
+      console.log("User not found");
       return res.status(404).send({ message: "User not found" });
     }
     const auth = await compare(password, user.password);
     if (!auth) {
+      console.log("Password is incorrect");
       return res.status(400).send({ message: "Password is incorrect" });
     }
 
@@ -53,6 +63,7 @@ export const login = async (req, res, next) => {
       secure: true,
       sameSite: "None",
     });
+    console.log(`Status ${res.status} Message: ${res.message}`);
     return res.status(200).json({
       user: {
         id: user.id,
@@ -65,6 +76,33 @@ export const login = async (req, res, next) => {
       },
     });
   } catch (error) {
+    console.log(`Status: ${error.status} Message: ${error.message}`);
+    return res.status(500).send("Internal Server Error");
+  }
+};
+
+export const getUserInfo = async (req, res, next) => {
+  console.log("---Get User Info---");
+
+  try {
+    const userData = await UserModel.findById(req.userId);
+    if (!userData) {
+      console.log("User not found");
+      return res.status(404).send({ message: "User not found" });
+    }
+    return res.status(200).json({
+      user: {
+        id: userData.id,
+        email: userData.email,
+        profileSetup: userData.profileSetup,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        image: userData.image,
+        color: userData.color,
+      },
+    });
+  } catch (error) {
+    console.log(`Status: ${error} Message: ${error.message}`);
     return res.status(500).send("Internal Server Error");
   }
 };
